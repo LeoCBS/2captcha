@@ -2,11 +2,23 @@ package captcha_test
 
 import (
 	"testing"
+	"io"
+	"net/http"
 
     "github.com/leocbs/2captcha/captcha"
 )
 
 const testKey = "testKey"
+
+//start http server to receive and test two captcha behavior
+func setUp(){
+	http.HandleFunc("/", mockIinputCaptcha)
+	http.ListenAndServe(":8000", nil)
+}
+
+func mockIinputCaptcha(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "Hello world!")
+}
 
 func TestShouldValidateEmptyKey(t *testing.T) {
     _,err := captcha.New("")
