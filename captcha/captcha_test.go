@@ -15,8 +15,10 @@ func TestShouldValidateEmptyKey(t *testing.T) {
     }
 }
 
-func TestShouldValidateEmptyFile(t *testing.T) {
-    //_,_ := captcha.New(testKey)
-	
-    
+func TestShouldValidateEmptyBase64(t *testing.T) {
+	twocaptcha,_ := captcha.New(testKey)
+	_, err := twocaptcha.UploadBase64Image("")
+	if err == nil{
+        t.Error("new captcha don't valid empty base64 image")
+    } 
 }
