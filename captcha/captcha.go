@@ -1,6 +1,14 @@
 package captcha
 
-import "errors"
+import (
+	"strings"
+	"bytes"
+	"errors"
+	"net/http"
+	"io/ioutil"
+	"mime/multipart"
+	"fmt"
+	)
 
 const (
 	inputUrl  = "http://2captcha.com/in.php"
@@ -30,7 +38,7 @@ func (captcha *Captcha) UploadBase64Image(base64 string) (string, error){
 	if base64 == ""{
 		return "", errors.New("base64 should be not empty")
 	}
-	bf, contentType, err := createForm(image)
+	bf, contentType, err := captcha.createForm(base64)
 	if err != nil {
 		return "", errors.New("failed to create form")
 	}
@@ -44,11 +52,21 @@ func (captcha *Captcha) UploadBase64Image(base64 string) (string, error){
 	if err != nil {
 		return "", err
 	}
-
+	_, err = getCaptchaID(body)
+	if err != nil{
+		return "", err
+	}
 	return body, nil
 }
 
-func perfomRequest(request *http.Request){
+func getCaptchaID(body string) (string, error){
+	if strings.Contains(body, "OK|"){
+		return strings.Split(body,"|")[1], nil
+	}
+	return "", errors.New(body)
+}
+
+func perfomRequest(request *http.Request) (string, error){
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	defer resp.Body.Close()
@@ -60,7 +78,7 @@ func perfomRequest(request *http.Request){
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.New("response status code different 200")
 	}
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +94,7 @@ func (captcha *Captcha) createForm(image string) (*bytes.Buffer, string, error) 
 	writer := multipart.NewWriter(&buffer)
 	defer writer.Close()
 
-	formCreator := &formError{}
+	formCreator := &formCreator{}
 	formCreator.createFormField("key", captcha.key, writer)
 	formCreator.createFormField("body", image, writer)
 	formCreator.createFormField("method", "base64", writer)
@@ -84,20 +102,20 @@ func (captcha *Captcha) createForm(image string) (*bytes.Buffer, string, error) 
 		return nil, "", formCreator.err
 	}
 
-	return &b, writer.FormDataContentType(), nil
+	return &buffer, writer.FormDataContentType(), nil
 }
 
 func (fc *formCreator) createFormField(fieldName string, fieldValue string, writer *multipart.Writer) {
-	if fe.err != nil {
+	if fc.err != nil {
 		return
 	}
 	fw, err := writer.CreateFormField(fieldName)
 	if err != nil {
-		fc.err = errors.Wrap(err, fmt.Sprintf("failed to create field %s ", fieldName))
+		fc.err = errors.New(fmt.Sprintf("failed to create field %s ", fieldName))
 		return
 	}
 	if _, err := fw.Write([]byte(fieldValue)); err != nil {
-		fc.err = errors.Wrap(err, fmt.Sprintf("failed to set %s value", fieldName))
+		fc.err = errors.New(fmt.Sprintf("failed to set %s value", fieldName))
 		return
 	}
 }
