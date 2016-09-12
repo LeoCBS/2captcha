@@ -1,29 +1,29 @@
 package captcha
 
 import (
-	"strings"
 	"bytes"
 	"errors"
-	"net/http"
+	"fmt"
 	"io/ioutil"
 	"mime/multipart"
-	"fmt"
-	)
-
-const (
-	inputUrl  = "http://2captcha.com/in.php"
-	responseUrl = "http://2captcha.com/res.php"
-	OK             = "OK"
-	notReady       = "CAPCHA_NOT_READY"
-	reportedOK     = "OK_REPORT_RECORDED"
+	"net/http"
+	"strings"
 )
 
-type Captcha struct{
+const (
+	inputUrl    = "http://2captcha.com/in.php"
+	responseUrl = "http://2captcha.com/res.php"
+	OK          = "OK"
+	notReady    = "CAPCHA_NOT_READY"
+	reportedOK  = "OK_REPORT_RECORDED"
+)
+
+type Captcha struct {
 	key string
 }
 
-func New(key string) (*Captcha, error){
-	if key == ""{
+func New(key string) (*Captcha, error) {
+	if key == "" {
 		return nil, errors.New("key should not be empty")
 	}
 	return &Captcha{
@@ -31,11 +31,10 @@ func New(key string) (*Captcha, error){
 	}, nil
 }
 
-
 //upload one base64 imagem to twocaptcha to be resolverd
 //return captcha id or one error
-func (captcha *Captcha) UploadBase64Image(base64 string) (string, error){
-	if base64 == ""{
+func (captcha *Captcha) UploadBase64Image(base64 string) (string, error) {
+	if base64 == "" {
 		return "", errors.New("base64 should be not empty")
 	}
 	bf, contentType, err := captcha.createForm(base64)
@@ -53,20 +52,20 @@ func (captcha *Captcha) UploadBase64Image(base64 string) (string, error){
 		return "", err
 	}
 	_, err = getCaptchaID(body)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	return body, nil
 }
 
-func getCaptchaID(body string) (string, error){
-	if strings.Contains(body, "OK|"){
-		return strings.Split(body,"|")[1], nil
+func getCaptchaID(body string) (string, error) {
+	if strings.Contains(body, "OK|") {
+		return strings.Split(body, "|")[1], nil
 	}
 	return "", errors.New(body)
 }
 
-func perfomRequest(request *http.Request) (string, error){
+func perfomRequest(request *http.Request) (string, error) {
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	defer resp.Body.Close()
@@ -123,8 +122,6 @@ func (fc *formCreator) createFormField(fieldName string, fieldValue string, writ
 // polling 2captcha response page until captcha is ready.
 // initSleep represent 2captcha average time to solve captcha, don't make senses polling
 // response before average time
-func PollingCaptchaResponse(captchaId string, initSleep int, pollingTime int) (string, error){
+func PollingCaptchaResponse(captchaId string, initSleep int, pollingTime int) (string, error) {
 	return "", nil
 }
-
-
