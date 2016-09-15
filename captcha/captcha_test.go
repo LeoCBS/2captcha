@@ -51,3 +51,8 @@ func TestShouldUploadBase64Image(t *testing.T) {
 		t.Error("upload image don't return captcha id correctly")
 	}
 }
+
+
+//test nil params
+//test captcha solution
+//test status code different 200
