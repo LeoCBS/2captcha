@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
@@ -15,7 +16,6 @@ const (
 	responseUrl = "http://2captcha.com/res.php"
 	OK          = "OK"
 	notReady    = "CAPCHA_NOT_READY"
-	reportedOK  = "OK_REPORT_RECORDED"
 )
 
 type Captcha struct {
@@ -51,14 +51,14 @@ func (captcha *Captcha) UploadBase64Image(base64 string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = getCaptchaID(body)
+	captchaID, err := getValueOK(body)
 	if err != nil {
 		return "", err
 	}
-	return body, nil
+	return captchaID, nil
 }
 
-func getCaptchaID(body string) (string, error) {
+func getValueOK(body string) (string, error) {
 	if strings.Contains(body, "OK|") {
 		return strings.Split(body, "|")[1], nil
 	}
@@ -120,8 +120,37 @@ func (fc *formCreator) createFormField(fieldName string, fieldValue string, writ
 }
 
 // polling 2captcha response page until captcha is ready.
-// initSleep represent 2captcha average time to solve captcha, don't make senses polling
+// initSleep represent 2captcha average time to solve captcha, don't makes senses polling
 // response before average time
-func PollingCaptchaResponse(captchaId string, initSleep int, pollingTime int) (string, error) {
-	return "", nil
+func (captcha *Captcha) PollingCaptchaResponse(captchaID string, initAverageSleep time.Duration, pollingTime time.Duration) (string, error) {
+	time.Sleep(initAverageSleep)
+	body, err := captcha.getResponse(captchaID, pollingTime)
+	if err != nil {
+		return "", err
+	}
+	solution, err := getValueOK(body)
+	if err != nil {
+		return "", err
+	}
+	return solution, nil
+
+}
+
+func (captcha *Captcha) getResponse(captchaID string, pollingTime time.Duration) (string, error) {
+	req, _ := http.NewRequest("GET", responseUrl, nil)
+
+	q := req.URL.Query()
+	q.Add("key", captcha.key)
+	q.Add("action", "get")
+	q.Add("id", captchaID)
+	req.URL.RawQuery = q.Encode()
+	body, err := perfomRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if body == notReady {
+		time.Sleep(pollingTime)
+		return captcha.getResponse(captchaID, pollingTime)
+	}
+	return body, nil
 }
