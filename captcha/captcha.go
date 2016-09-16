@@ -120,9 +120,15 @@ func (fc *formCreator) createFormField(fieldName string, fieldValue string, writ
 }
 
 // polling 2captcha response page until captcha is ready.
-// initSleep represent 2captcha average time to solve captcha, don't makes senses polling
+// initAverageSleep represent 2captcha average time to solve captcha, don't makes senses polling
 // response before average time
 func (captcha *Captcha) PollingCaptchaResponse(captchaID string, initAverageSleep time.Duration, pollingTime time.Duration) (string, error) {
+	validator := &pollingValidator{}
+	validator.validatePollingParams(captchaID,initAverageSleep,pollingTime)
+	if validator.err !=nil {
+		return "", validator.err
+	}
+
 	time.Sleep(initAverageSleep)
 	body, err := captcha.getResponse(captchaID, pollingTime)
 	if err != nil {
@@ -133,6 +139,30 @@ func (captcha *Captcha) PollingCaptchaResponse(captchaID string, initAverageSlee
 		return "", err
 	}
 	return solution, nil
+}
+
+type pollingValidator struct {
+	err error
+}
+
+func (validator *pollingValidator) validatePollingParams(captchaID string,
+	initAverageSleep time.Duration,
+	pollingTime time.Duration){
+	if validator.err != nil{
+		return
+	}
+	if captchaID == ""{
+		validator.err = errors.New("CaptchaID should not be empty")
+		return
+	}
+	if initAverageSleep == 0{
+		validator.err = errors.New("initAverageSleep should not be zero")
+		return
+	}
+	if pollingTime == 0{
+		validator.err = errors.New("pollingTime should not be zero")
+		return
+	}
 
 }
 
