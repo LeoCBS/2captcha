@@ -52,6 +52,10 @@ func TestShouldUploadBase64Image(t *testing.T) {
 	}
 }
 
+unc TestShouldValidateCaptchaIDPollingTime(t *testing.T) {
+	twocaptcha, _ := captcha.New(testKey)
+	_, err := twocaptcha.PollingCaptchaResponse("")
+
 
 //test nil params
 //test captcha solution
