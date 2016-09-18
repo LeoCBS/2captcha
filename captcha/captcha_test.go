@@ -52,7 +52,7 @@ func TestShouldUploadBase64Image(t *testing.T) {
 	}
 }
 
-func TestShouldValidateCaptchaIDPollingTime(t *testing.T) {
+func TestShouldValidateCaptchaIDPollingResponse(t *testing.T) {
 	twocaptcha, _ := captcha.New(testKey)
 	_, err := twocaptcha.PollingCaptchaResponse("",1,1)
 	if err == nil {
@@ -60,7 +60,49 @@ func TestShouldValidateCaptchaIDPollingTime(t *testing.T) {
 	}
 }
 
+func TestShouldValidateInitAverageSleepPollingResponse(t *testing.T) {
+	twocaptcha, _ := captcha.New(testKey)
+	_, err := twocaptcha.PollingCaptchaResponse("captchaID",0,1)
+	if err == nil {
+		t.Error("sleep init time didn't validated")
+	}
+}
 
-//test nil params
+func TestShouldValidatePollingTimePollingResponse(t *testing.T) {
+	twocaptcha, _ := captcha.New(testKey)
+	_, err := twocaptcha.PollingCaptchaResponse("captchaID",1,0)
+	if err == nil {
+		t.Error("polling time didn't validated")
+	}
+}
+
+func TestShouldPollingCaptchaResponse(t *testing.T) {
+	setUp()
+	httpmock.DefaultTransport.RegisterResponder("POST", "http://2captcha.com/res.php",
+		func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				Status:     strconv.Itoa(200),
+				StatusCode: 200,
+				Body:       httpmock.NewRespBodyFromString("OK|captchaBroken"),
+				Header:     http.Header{},
+			}, nil
+
+		})
+
+	twocaptcha, _ := captcha.New(testKey)
+	captchaID, err := twocaptcha.UploadBase64Image("dHdvY2FwdGNoYQ==")
+	if err != nil {
+		t.Errorf("upload response not OK: %s", err)
+	}
+	if captchaID != "captchaID" {
+		t.Error("upload image don't return captcha id correctly")
+	}
+	_, err = twocaptcha.PollingCaptchaResponse(captchaID,1,1)
+	if err != nil {
+		t.Errorf("unable to get captcha response: %s", err)	
+	}
+}
+
+
 //test captcha solution
 //test status code different 200

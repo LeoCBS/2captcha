@@ -122,7 +122,7 @@ func (fc *formCreator) createFormField(fieldName string, fieldValue string, writ
 // polling 2captcha response page until captcha is ready.
 // initAverageSleep represent 2captcha average time to solve captcha, don't makes senses polling
 // response before average time
-func (captcha *Captcha) PollingCaptchaResponse(captchaID string, initAverageSleep time.Duration, pollingTime time.Duration) (string, error) {
+func (captcha *Captcha) PollingCaptchaResponse(captchaID string,initAverageSleep time.Duration,pollingTime time.Duration) (string, error) {
 	validator := &pollingValidator{}
 	validator.validatePollingParams(captchaID,initAverageSleep,pollingTime)
 	if validator.err !=nil {
