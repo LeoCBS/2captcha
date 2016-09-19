@@ -68,7 +68,11 @@ func getValueOK(body string) (string, error) {
 func perfomRequest(request *http.Request) (string, error) {
 	client := &http.Client{}
 	resp, err := client.Do(request)
-	defer resp.Body.Close()
+	defer func() {
+		if resp.Body != nil {
+			resp.Body.Close()
+		}
+	}()
 
 	if err != nil {
 		return "", err
@@ -122,10 +126,10 @@ func (fc *formCreator) createFormField(fieldName string, fieldValue string, writ
 // polling 2captcha response page until captcha is ready.
 // initAverageSleep represent 2captcha average time to solve captcha, don't makes senses polling
 // response before average time
-func (captcha *Captcha) PollingCaptchaResponse(captchaID string,initAverageSleep time.Duration,pollingTime time.Duration) (string, error) {
+func (captcha *Captcha) PollingCaptchaResponse(captchaID string, initAverageSleep time.Duration, pollingTime time.Duration) (string, error) {
 	validator := &pollingValidator{}
-	validator.validatePollingParams(captchaID,initAverageSleep,pollingTime)
-	if validator.err !=nil {
+	validator.validatePollingParams(captchaID, initAverageSleep, pollingTime)
+	if validator.err != nil {
 		return "", validator.err
 	}
 
@@ -147,19 +151,19 @@ type pollingValidator struct {
 
 func (validator *pollingValidator) validatePollingParams(captchaID string,
 	initAverageSleep time.Duration,
-	pollingTime time.Duration){
-	if validator.err != nil{
+	pollingTime time.Duration) {
+	if validator.err != nil {
 		return
 	}
-	if captchaID == ""{
+	if captchaID == "" {
 		validator.err = errors.New("CaptchaID should not be empty")
 		return
 	}
-	if initAverageSleep == 0{
+	if initAverageSleep == 0 {
 		validator.err = errors.New("initAverageSleep should not be zero")
 		return
 	}
-	if pollingTime == 0{
+	if pollingTime == 0 {
 		validator.err = errors.New("pollingTime should not be zero")
 		return
 	}
