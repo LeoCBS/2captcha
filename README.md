@@ -1,6 +1,7 @@
 # 2captcha
 Little wrapper for 2captcha API
 
+[![Build Status](https://travis-ci.org/LeoCBS/2captcha.svg?branch=master)](https://travis-ci.org/LeoCBS/2captcha)
 
 ## Upload image base64
 

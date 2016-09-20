@@ -1,8 +1,8 @@
 package captcha_test
 
 import (
-	"github.com/leocbs/2captcha/captcha"
-	"github.com/leocbs/2captcha/captcha/httpmock"
+	"github.com/LeoCBS/2captcha/captcha"
+	"github.com/LeoCBS/2captcha/captcha/httpmock"
 	"net/http"
 	"strconv"
 	"testing"
